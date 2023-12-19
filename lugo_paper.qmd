@@ -1,0 +1,97 @@
+---
+title: "Estimating Recidivism Based on Prison Sentence"
+author: "Annabella Lugo [(Github)](https://github.com/annabella-lugo/PLSC-536-Final-Project)"
+format:
+  cmc-article-pdf:
+    fontsize: 12pt
+    margin-left: 1.5in
+    margin-right: 1.5in
+    margin-bottom: 1.2in
+    margin-top: 1.2in
+    keep-tex: true
+    fig-pos: 'tbp'
+    tbl-pos: 'tbp'
+    include-in-header: header.tex
+bibliography: bibliography.bib
+abstract: | 
+  Some criminal justice scholars and many reform activists have argued that prison has a criminogenic effect rather than a deterrent effect. Studies show mixed results on this contention. This paper seeks to test that hypothesis using a Florida Department of Corrections dataset. Using a random sample of current inmates and those released since 1997, I train a model and test its ability to predict the probability of an individual recidivating based on length of prison term and other factors. I find that the model incorporating only the length of prison term is very similar in predicting the probability of recidivism compared to the model incorporating race, sex, county, and type of custody. Both models show a very small increase in the probability of recidivism for every additional month spent in prison. These results highlight the limitations of predictive models in estimating criminal justice outcomes.
+---
+
+# Introduction
+The United States is plagued by the issue of mass incarceration. The US has the highest incarceration rate compared to other Western democracies and this disparity is not explained by differences in crime rates but rather by a history of moral panic that leads to intolerance and tightening of criminal punishment policies [@tonry1999us]. The War on Drugs, beginning in the 1980s, instituted mandatory minimum sentencing policies that discriminated against Black communities by charging the drugs used in those communities with much harsher penalties. This has led to a long-lasting impact where Black men are disproportionately represented in prisons. While they account for 12% of the population and 14% of monthly drug users, they make up 37% of drug arrests, 59% of drug convictions, and 74% of drug imprisonments [@bangs2015america].
+
+One of the main arguments in favor of enacting long prison sentences as punishments for crime is that these sentences act as a deterrent and curb recidivism, which is the propensity of a convicted person to re-offend. Sociologists and criminologists, however, find that labeling someone a criminal actually has the opposite effect because the individual will act in accordance with the negative self-image society has created for them [@cid2009imprisonment]. This theory brings into question the efficacy of harsh criminal justice policies. 
+
+This paper seeks to analyze whether prison term length is associated with the probability of recidivism. I attempt to predict recidivism first using only months spent in prison as a predictor and then including other predictors such as race, sex, county, and type of custody. I find that an increase in prison sentence (per month) is associated with a 0.001 to 0.004 unit increase in the probability of recidivism. This result, while small, is statistically significant at the p < 0.001 level and has implications for individuals incarcerated for decades. A test of model discrimination shows that the two models are very similar in their predictive capacity and assert a moderately good estimate. 
+
+# Literature Review
+One widely cited study study by @cullen2011prisons found that incarceration deepens and individual’s involvement with criminal activity. The author demonstrates that there is little support for the claim that prisons reduce recidivism and at least some evidence to the contrary. As such, other scholars have built upon this theory and compared individuals who received a custodial sentence or an alternative sanction to evaluate their respective rates of recidivism. @cid2009imprisonment conducted his study on people convicted in Barcelona and found that the group given custodial sentences had a 73.2% recidivism rate while the non-custodial sentence group had a 13.8% recidivism rate. This provides evidence that incarceration is not an effective means of reducing future crimes. 
+
+When attempting to predictive recidivism risk factors and prevent crime, policymakers have a long way to go. @desmarais2018performance conducted a literature review of 53 studies done in the United States that test the validity of 19 risk assessment tools and find that none stood out as the most reliable, highlighting the need to continue looking for risk factors. As such, recently implemented risk assessment tools have been met with skepticism. Despite @brennan2009evaluating finding that the COMPAS instrument exceeded the predictive validity of similar metrics, @dressel2018accuracy reevaluate COMPAS and respond that it is not more accurate than predictions made by people with limited criminal justice expertise, and that COMPAS’ use of over 137 factors does not increase the predictive capacity beyond a two feature model.
+
+There are, however, studies that find the threat of a criminogenic effect to be exaggerated. @bhati2007estimating concluded in their study following state offenders for three years post-release in 1994 that 40% of the sample was deterred, 56% returned to a pattern similar to their behavior before being incapacitated by incarceration, and 4% showed a criminogenic effect. This study is interesting because it defines criminogenic effect as an escalating pattern of criminal behavior. While this is certainly an academically defensible definition, how others define it, and how I seek to define it, is having the opposite of a deterrent effect. In that vein, I look to observational data to test the theory of whether prison contributes to recidivism among those who served longer sentences.
+
+# Data and Methods
+I pull from the general results of @dressel2018accuracy to motivate my exploration of predictive tools in a new dataset. I choose to analyze Florida prisons because Florida is the state with the third-highest incarcerated population [@Korhonen_2023]. The Florida Department of Corrections (FDOC) has a database called OBIS which contains information on individuals released since 1997. Each inmate is assigned a unique DCNumber that stays with them if they leave the system and are then re-convicted and enter the prison system again. It is by tracking these numbers that I was able to begin my analysis of recidivism. 
+
+Working with observational data requires careful cleaning of data and attention to confounding factors. Because recidivism is a complex sociological phenomenon, I attempted to streamline the data to isolate the variable of interest. I filtered for DCNumbers with multiple dates of adjudication one year apart. I choose one year as a sufficient period of time to ensure that the convictions are for separate crimes and not simply a chain on of convictions arising out of the same criminal act. I coded those matches as 1 for did recidivate. The database provides prison term as a 7-digit number with three digits for the years, two digits for the months, and two digits for the days. I converted this 7 digit number into months incarcerated so it would be more easily interpretable by the model and in the results. To ensure only those capable of re-offending were included in the sample, I filtered out those whose only offense resulted in a life or death  sentence (those with secondary or subsequent offenses resulting in those sentences remained included) and those who were deceased. Because individuals were in the database multiple times due to multiple convictions, once I had coded individuals as did recidivate or did not, I sliced the data so only the first offense for an individual would be included in the model data. This is so individuals are not double counted as multiple observations since that would lead to some people being overrepresented and biasing the prediction. 
+
+To provide additional predictors for the model, I joined the basic offense dataset with others from the FDOC that include birth date (which I use to calculate age at adjudication), race, sex, and custody type. I considered additional factors such as charge description, but ultimately ruled against it due to the FDOC providing long descriptions that were not consistently identifiable across individuals and its inability to function properly within the model. Once this cleaning was finalized, I filtered out for incomplete data rows and took a random sample of 100,000 individuals. I did this to ensure enough observations for meaningful but to not overwhelm the model with too much noise. Given the results, discussed in the following section, future studies could run this on a larger sample, potentially the entire FDOC database, and examine whether the effect is larger.
+
+The largest assumption made in prediction models is that future patterns will follow past trends. Given that in the past four decades, criminal justice trends of mass incarceration and the demographic composition of the prison population have remained constant, it is appropriate to assume that, given the lack of sweeping reform, past trends are indicative of future patterns. There is also the condition in predictive modeling that the training and testing dataset are not dramatically different. To minimize this concern, I engaged in a random selection of the same so there would be statistically significant difference in composition. The summary statistics are reported below in @tbl-summary.
+
+
+|                               |
+|:------------------------------|
+| ![](lugo_tables/Table_1.png){width="50%"} |
+
+: Summary Statistics. I have excluded counties for clarity but there is representation from every county in Florida. {#tbl-summary}
+
+The summary statistics show that the sample is representative of the larger prison population. Men are the overwhelming majority of inmates. Black people are disproportionately represented compared to the United States population, but this is in line with trends of mass incarceration arising out of unequal policing and sentencing tactics. Very few people are placed into maximum level custody which the FDOC notes is reserved for death sentences. The other levels of custody are much more represented, with medium being the most common. I included counties in the model but excluded them from the summary statistics table for clarity. The data included observation from each of 67 Florida counties. The distribution seemed to match the general population distribution with counties like Miami-Dade and Broward which hold the metropolitan cities of Miami and Fort Lauderdale, respectively, having more inmates than rural counties. 
+
+Once I determined that the beginning conditions of the data were representative of the general prison population in Florida, I began working on the models. I train the models on 80% of the sample and test it on 20% to ensure that it has enough observations to provide accurate predictions. I construct two models. Model one is a basic regression of recidivism on prison term in months represented by:
+$$
+\text{{logit}}(\pi_i) = \beta_0 + \beta_1 \cdot \text{{Prison} {Term} {In} {Months}}_i
+$$
+where $\pi_i$ represents the probability of recidivism for the i-th observation, $\beta_0$ is the intercept, and $\beta_1$ is the coefficient for the predictor variable Prison Term In Months.
+Model two includes the predictors of race, sex, age at adjudication, custody type, and county which is represented by:
+$$
+\begin{aligned}
+\text{logit}(\pi_i) &= \beta_0 + \beta_1 \cdot \text{Prison Term In Months}_i \\
+&+ \beta_2 \cdot \text{Race}_i + \beta_3 \cdot \text{Sex}_i + \beta_4 \cdot \text{Age {At} Adjudication}_i \\
+&+ \beta_5 \cdot \text{Custody Type}_i + \beta_6 \cdot \text{County}_i
+\end{aligned}
+$$
+where $(\pi_i)$ represents the probability of recidivism for the i-th observation, $\beta_0$ is the intercept, and $\beta_1,...,\beta_6$ are the intercept and coefficients for the predictor variables. 
+
+These variables are of most interest since the criminology scholarship has created many theories about the effect of incarceration, race, sex, age, and custodial intensity on recidivism. I chose to include county to evaluate whether being from a more populous area had any effect on recidivism. Had I found an effect, possible explanations could be greater access to community reintegration programs. These are the factors which FDOC provided the most complete data. This model could also be extended but with a word of caution that because recidivism is complex, included two many factors could cloud interaction effects and produce muddied results. Nevertheless, these models provide a starting point, not an exhaustive list, of factors that can be included as predictors.
+
+# Results 
+@tbl-reg-sum shows the results of the regression.
+
+|                               |
+|:------------------------------|
+| ![](lugo_tables/Table_2.png){width="75%"} |
+
+: Effect of Time Served on Recidivism. There was not trend of significance for the counties, so they have been excluded for clarity {#tbl-reg-sum}
+
+In both models and across both the training and testing data, I find Prison Term in Months to be a statistically significant predictor of the probability of recidivating. The size of the effect is between 0.001 and 0.003 in increased log odds of recidivating for a one month increase of time spent in prison. While the magnitude is small, it is in the anticipating direction. This has implications for the increased probability of recidivism for individuals serving very long sentences. 
+
+In Model 2, race was not found to be a significant predictor. Being male was associated with a 0.558 increase in the log odds of recidivism in the training data and a 0.667 increase in the testing data. This was significant at the p < 0.01 and p < 0.1 levels respectively. Age at adjudication was negatively associated with recidivism. An increase of one year in age was associated with a 0.036 decrease in the log odds of recidivism, significant at the p < 0.001. Community custody was associated with approximately a 1.2 decrease in the log odds of recidivism. Other levels of custody showed decreases as varying levels of significance except for maximum custody which showed a large increase in the log odds of recidivism in the training set (significant) but a large decrease in the log odds in the testing set (not statistically significant). 
+
+The root mean squared error (RMSE) for Model 1 was 0.09 and 0.10 for Model 2. This low RMSE indicates that the model is a good fit for the data. Another test of model predictiveness is the receiver operating characteristic (ROC) curve. @fig-curve shows the ROC curve of the two models which illustrates their discriminatory power. It plots the true positive rate against the false positive rate. The area under the curve assesses the effectiveness of the model in classifying data. This can range from 0 being no better than random to 1 which is perfect prediction. Both of the models sit above the 0.7 threshold to be considered acceptable. 
+
+![Discriminatory Power of the Models](lugo_figures/Figure_1_Curve.png){#fig-curve width="50%" fig-pos="H"} 
+
+Interestingly, the more elementary model does slightly better than the model with multiple predictors. This is in line with what @dressel2018accuracy found with the COMPAS risk assessment tool. For future research, this suggests that in predicting recidivism, more complex is not always better. For policymakers seeking to enact legislation that curbs recidivism, at factors individually and seeing what their effects are appears to be the best course of action. 
+
+# Conclusion
+The results show that while small, there is an associated increase in log odds of recidivism for each additional month spent in prison. Age of adjudication was negatively associated with the predicted probability of recidivism lending support to theories about "growing out" of juvenile delinquency and the possibility of rehabilitation. There is also an open question about different levels of custody and their impact on the probability of re-offending. This paper's findings provide an interesting avenue for further exploration of predictive models in the field of criminal justice. While the models showed a very low root mean squared error and an acceptable area under the ROC curve, this alone is not enough to conclusively state that the models are solid predictors. Given the controversy of risk assessment tools, policymakers should approach them skeptically and understand their limitations.
+
+This study was conducted only with data from one state within a certain country's prison system. Readers should be careful not to extrapolate this too widely to other states, much less other countries. Florida has a very large incarcerated population, and it also has quite harsh criminal justice policies. I cannot say how these predictors would work in states with more lenient policies as there could be factors of overall governmental structures that interact with the predictors of interest in the model. If one wanted to place many more predictors in the model, other statistical avenues such as LASSO which institute penalties for complexity would then be appropriate to ensure a balance between the complexity of the model and its usefulness. Due to the limited publicly-available data, other factors such as visitation and in-prison education could not be testing but may be confounding variables. Predictive models are a strong starting point, but in questions where sociology and political science meet, they lend themselves to be supplemented by qualitative methods such as interviews to disentangle the pathways that link time served and other variables to recidivism risk. Nevertheless, quantitative measures remain a strong way of analyzing a large amount of observations and deciphering trends. If studies, such as this one, find that a goal of the criminal justice system is actually being hindered by excessively long prison sentences, activists and politicians can work to target what is not working and provide alternatives. By combining theory with predictive models, researchers can craft better risk assessment tools that lead to creating comprehensive criminal justice reform policies. 
+
+
+::: {#refs}
+:::
+
+
